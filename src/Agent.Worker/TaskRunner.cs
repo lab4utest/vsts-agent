@@ -50,7 +50,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 .FirstOrDefault();
             if (handlerData == null)
             {
-                throw new Exception(StringUtil.Loc("SupportedTaskHandlerNotFound"));
+#if OS_WINDOWS
+                throw new Exception(StringUtil.Loc("SupportedTaskHandlerNotFoundWindows"));
+#else
+                throw new Exception(StringUtil.Loc("SupportedTaskHandlerNotFoundNonWindows"));
+#endif                
             }
 
             // Load the default input values from the definition.
