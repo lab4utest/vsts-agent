@@ -45,7 +45,19 @@ namespace Microsoft.VisualStudio.Services.Agent
             _connection = agentConnection;
             if (!_connection.HasAuthenticated)
             {
-                await _connection.ConnectAsync();
+                for (int attempt = 0; attempt < 2; attempt++)
+                {
+                    try
+                    {
+                        await _connection.ConnectAsync();
+                        break;
+                    }
+                    catch (Exception ex) when (attempt == 0)
+                    {
+                        Trace.Error("Catch Exception during create agent server connection.");
+                        Trace.Error(ex);
+                    }
+                }
             }
 
             _taskAgentClient = _connection.GetClient<TaskAgentHttpClient>();

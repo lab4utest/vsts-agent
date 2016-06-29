@@ -34,7 +34,19 @@ namespace Microsoft.VisualStudio.Services.Agent
 
             if (!_connection.HasAuthenticated)
             {
-                await _connection.ConnectAsync();
+                for (int attempt = 0; attempt < 2; attempt++)
+                {
+                    try
+                    {
+                        await _connection.ConnectAsync();
+                        break;
+                    }
+                    catch (Exception ex) when (attempt == 0)
+                    {
+                        Trace.Error("Catch Exception during create job server connection.");
+                        Trace.Error(ex);
+                    }
+                }
             }
 
             _taskClient = _connection.GetClient<TaskHttpClient>();
