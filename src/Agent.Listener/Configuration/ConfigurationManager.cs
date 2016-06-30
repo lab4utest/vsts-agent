@@ -176,17 +176,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             TaskAgent agent;
             while (true)
             {
-                agentName = command.GetAgent();
+                agentName = command.GetAgentName();
 
                 // Get the system capabilities.
                 // TODO: Hook up to ctrl+c cancellation token.
-                // TODO: LOC
-                _term.WriteLine("Scanning for tool capabilities.");
+                _term.WriteLine(StringUtil.Loc("ScanToolCapabilities"));
                 Dictionary<string, string> systemCapabilities = await HostContext.GetService<ICapabilitiesManager>().GetCapabilitiesAsync(
                     new AgentSettings { AgentName = agentName }, CancellationToken.None);
 
-                // TODO: LOC
-                _term.WriteLine("Connecting to the server.");
+                _term.WriteLine(StringUtil.Loc("ConnectToServer"));
                 agent = await GetAgent(agentName, poolId);
                 if (agent != null)
                 {
@@ -276,6 +274,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 // Save the provided admin credential data for compat with existing agent
                 _store.SaveCredential(credProvider.CredentialData);
             }
+
+            // Testing agent connection, detect any protential connection issue, like local clock skew that cause OAuth token expired.
+            _term.WriteLine(StringUtil.Loc("TestAgentConnection"));
+            var credMgr = HostContext.GetService<ICredentialManager>();
+            VssCredentials credential = credMgr.LoadCredentials();
+            VssConnection conn = ApiUtil.CreateConnection(new Uri(serverUrl), credential);
+            var agentSvr = HostContext.GetService<IAgentServer>();
+            await agentSvr.ConnectAsync(conn);
 
             // We will Combine() what's stored with root.  Defaults to string a relative path
             string workFolder = command.GetWork();
